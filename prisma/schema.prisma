@@ -1,15 +1,169 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client"
-  output   = "../app/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum UserRole {
+  OWNER
+  STAFF
+}
+
+enum ClientStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum JobStatus {
+  DRAFT
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CLOSED
+}
+
+enum TaskStatus {
+  TODO
+  DOING
+  DONE
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  VOID
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  role      UserRole @default(STAFF)
+
+  assignedJobs  Job[]  @relation("JobAssignee")
+  assignedTasks Task[] @relation("TaskAssignee")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Client {
+  id                 String      @id @default(uuid())
+  name               String
+  primaryContactName String?
+  email              String?
+  phone              String?
+  address            String?
+  notes              String?
+  status             ClientStatus @default(ACTIVE)
+
+  jobs     Job[]
+  invoices Invoice[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+}
+
+model Job {
+  id            String    @id @default(uuid())
+  clientId      String
+  title         String
+  description   String?
+  status        JobStatus @default(DRAFT)
+  scheduledDate DateTime?
+  dueDate       DateTime?
+
+  // MVP: one primary assignee
+  assignedUserId String?
+  assignedUser   User? @relation("JobAssignee", fields: [assignedUserId], references: [id])
+
+  client  Client  @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  tasks   Task[]
+  invoice Invoice?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clientId])
+  @@index([status])
+  @@index([assignedUserId])
+}
+
+model Task {
+  id          String       @id @default(uuid())
+  jobId       String
+  title       String
+  notes       String?
+  status      TaskStatus   @default(TODO)
+  priority    TaskPriority @default(MEDIUM)
+  dueDate     DateTime?
+  completedAt DateTime?
+
+  assignedUserId String
+  assignedUser   User @relation("TaskAssignee", fields: [assignedUserId], references: [id], onDelete: Restrict)
+
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([jobId])
+  @@index([assignedUserId])
+  @@index([status])
+  @@index([dueDate])
+}
+
+model Invoice {
+  id            String        @id @default(uuid())
+  jobId         String        @unique // invoice ALWAYS tied to a job (1:1 in MVP)
+  clientId      String
+  invoiceNumber String        @unique
+  status        InvoiceStatus @default(DRAFT)
+  issueDate     DateTime      @default(now())
+  dueDate       DateTime?
+
+  notes         String?
+  subtotalCents Int           @default(0)
+  totalCents    Int           @default(0)
+  paidAt        DateTime?
+
+  job    Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  client Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  items  InvoiceLineItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clientId])
+  @@index([status])
+}
+
+model InvoiceLineItem {
+  id             String @id @default(uuid())
+  invoiceId      String
+  description    String
+  quantity       Int    @default(1)
+  unitPriceCents Int    @default(0)
+  lineTotalCents Int    @default(0)
+  sortOrder      Int    @default(0)
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([invoiceId])
+}
+
