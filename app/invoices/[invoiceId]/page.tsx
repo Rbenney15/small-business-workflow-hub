@@ -1,20 +1,24 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
-import { addLineItem, deleteLineItem } from "./actions";
+import {
+  addLineItem,
+  deleteLineItem,
+  setInvoiceStatus,
+} from "./actions";
 
 function dollars(cents: number) {
   return `$${(cents / 100).toFixed(2)}`;
 }
 
+const btnPrimary =
+  "inline-flex items-center rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900/20";
+
 const btnSecondary =
   "inline-flex items-center rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900/10";
 
 const btnSmall =
-  "rounded-lg border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-900 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900/10";
-
-const btnPrimary =
-  "inline-flex items-center rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900/20";
+  "inline-flex items-center rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-900 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900/10";
 
 export default async function InvoiceDetailPage({
   params,
@@ -36,6 +40,7 @@ export default async function InvoiceDetailPage({
 
   return (
     <main className="space-y-6">
+      {/* Header */}
       <header className="space-y-2">
         <div className="text-sm text-gray-500">
           <Link href={`/jobs/${invoice.jobId}`} className="hover:underline">
@@ -49,7 +54,44 @@ export default async function InvoiceDetailPage({
             <h1 className="text-2xl font-semibold text-gray-900">
               {invoice.invoiceNumber}
             </h1>
-            <p className="text-sm text-gray-600">{invoice.status}</p>
+
+            <div className="mt-1 flex items-center gap-2 text-sm">
+              <span className="text-gray-600">Status:</span>
+              <span className="font-medium text-gray-900">
+                {invoice.status}
+              </span>
+            </div>
+
+            {/* Status Buttons */}
+            <div
+              className="mt-3 flex flex-wrap gap-2"
+              aria-label="Invoice status actions"
+            >
+              {(["DRAFT", "SENT", "PAID"] as const).map((status) => {
+                const isActive = invoice.status === status;
+
+                return (
+                  <form
+                    key={status}
+                    action={async () => {
+                      "use server";
+                      await setInvoiceStatus(invoice.id, status);
+                    }}
+                  >
+                    <button
+                      className={
+                        isActive
+                          ? "inline-flex items-center rounded-lg bg-gray-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-gray-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900/20"
+                          : btnSmall
+                      }
+                      aria-pressed={isActive}
+                    >
+                      Mark {status}
+                    </button>
+                  </form>
+                );
+              })}
+            </div>
           </div>
 
           <Link href={`/jobs/${invoice.jobId}`} className={btnSecondary}>
@@ -58,12 +100,16 @@ export default async function InvoiceDetailPage({
         </div>
       </header>
 
-      {/* Summary */}
+      {/* Summary Cards */}
       <section className="grid gap-4 md:grid-cols-3">
         <div className="rounded-xl border bg-white p-4 md:col-span-2 space-y-2">
           <div className="text-sm text-gray-600">Client</div>
-          <div className="font-medium text-gray-900">{invoice.client.name}</div>
-          <div className="text-sm text-gray-600">Job: {invoice.job.title}</div>
+          <div className="font-medium text-gray-900">
+            {invoice.client.name}
+          </div>
+          <div className="text-sm text-gray-600">
+            Job: {invoice.job.title}
+          </div>
         </div>
 
         <div className="rounded-xl border bg-white p-4">
@@ -84,30 +130,33 @@ export default async function InvoiceDetailPage({
         </div>
 
         {invoice.items.length === 0 ? (
-          <div className="p-4 text-sm text-gray-600">No line items yet.</div>
+          <div className="p-4 text-sm text-gray-600">
+            No line items yet.
+          </div>
         ) : (
           <ul>
-            {invoice.items.map((it) => (
-              <li key={it.id} className="border-t px-4 py-3">
+            {invoice.items.map((item) => (
+              <li key={item.id} className="border-t px-4 py-3">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <div className="font-medium text-gray-900">
-                      {it.description}
+                      {item.description}
                     </div>
                     <div className="text-xs text-gray-500">
-                      Qty: {it.quantity} • Unit: {dollars(it.unitPriceCents)}
+                      Qty: {item.quantity} • Unit:{" "}
+                      {dollars(item.unitPriceCents)}
                     </div>
                   </div>
 
                   <div className="flex items-center gap-3">
                     <div className="font-semibold text-gray-900">
-                      {dollars(it.lineTotalCents)}
+                      {dollars(item.lineTotalCents)}
                     </div>
 
                     <form
                       action={async () => {
                         "use server";
-                        await deleteLineItem(invoice.id, it.id);
+                        await deleteLineItem(invoice.id, item.id);
                       }}
                     >
                       <button className={btnSmall}>Delete</button>
@@ -119,7 +168,7 @@ export default async function InvoiceDetailPage({
           </ul>
         )}
 
-        {/* Totals row */}
+        {/* Totals Row */}
         <div className="border-t bg-white px-4 py-3 text-sm">
           <div className="flex justify-between">
             <span className="text-gray-700">Subtotal</span>
@@ -188,7 +237,7 @@ export default async function InvoiceDetailPage({
         </form>
 
         <p className="text-xs text-gray-500">
-          Tip: Use <span className="font-medium">12.50</span> for $12.50.
+          Tip: Use 12.50 for $12.50.
         </p>
       </section>
     </main>

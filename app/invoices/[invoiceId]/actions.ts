@@ -73,3 +73,14 @@ export async function deleteLineItem(invoiceId: string, itemId: string) {
   await recalcInvoice(invoiceId);
   redirect(`/invoices/${invoiceId}`);
 }
+export async function setInvoiceStatus(
+  invoiceId: string,
+  status: "DRAFT" | "SENT" | "PAID"
+) {
+  await prisma.invoice.update({
+    where: { id: invoiceId },
+    data: { status },
+  });
+
+  redirect(`/invoices/${invoiceId}`);
+}
