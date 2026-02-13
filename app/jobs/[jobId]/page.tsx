@@ -76,6 +76,10 @@ export default async function JobDetailPage({
           </div>
 
           <div className="flex items-center gap-2">
+            <Link href={`/jobs/${job.id}/edit`} className={btnSecondary}>
+              Edit Job
+            </Link>
+
             <Link href={`/jobs/${job.id}/tasks/new`} className={btnSecondary}>
               New Task
             </Link>
@@ -160,6 +164,7 @@ export default async function JobDetailPage({
 
           <div className="mt-4 border-t pt-4">
             <div className="text-xs font-medium text-gray-500 mb-1">Invoice</div>
+
             {!job.invoice ? (
               <div className="text-sm text-gray-600">No invoice yet</div>
             ) : (
@@ -167,6 +172,7 @@ export default async function JobDetailPage({
                 <div className="font-medium text-gray-900">
                   {job.invoice.invoiceNumber}
                 </div>
+
                 <div className="text-xs text-gray-500">{job.invoice.status}</div>
               </div>
             )}

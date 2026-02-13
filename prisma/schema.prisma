@@ -18,11 +18,10 @@ enum ClientStatus {
 }
 
 enum JobStatus {
-  DRAFT
   SCHEDULED
   IN_PROGRESS
   COMPLETED
-  CLOSED
+  CANCELLED
 }
 
 enum TaskStatus {
@@ -81,13 +80,13 @@ model Job {
   clientId      String
   title         String
   description   String?
-  status        JobStatus @default(DRAFT)
+  status        JobStatus @default(SCHEDULED)
   scheduledDate DateTime?
   dueDate       DateTime?
 
-  // MVP: one primary assignee
-  assignedUserId String?
-  assignedUser   User? @relation("JobAssignee", fields: [assignedUserId], references: [id])
+  // MVP: one primary assignee (required)
+  assignedUserId String
+  assignedUser   User @relation("JobAssignee", fields: [assignedUserId], references: [id])
 
   client  Client  @relation(fields: [clientId], references: [id], onDelete: Cascade)
   tasks   Task[]
@@ -100,6 +99,7 @@ model Job {
   @@index([status])
   @@index([assignedUserId])
 }
+
 
 model Task {
   id          String       @id @default(uuid())

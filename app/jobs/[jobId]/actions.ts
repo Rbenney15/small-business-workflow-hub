@@ -3,26 +3,26 @@
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 
-const NEXT_STATUS: Record<string, "TODO" | "DOING" | "DONE"> = {
-  TODO: "DOING",
-  DOING: "DONE",
-  DONE: "TODO",
-};
-
 export async function cycleTaskStatus(jobId: string, taskId: string) {
   const task = await prisma.task.findUnique({
     where: { id: taskId },
-    select: { id: true, status: true },
+    select: { id: true, status: true, jobId: true },
   });
 
   if (!task) throw new Error("Task not found.");
+  if (task.jobId !== jobId) throw new Error("Task does not belong to this job.");
 
-  const next = NEXT_STATUS[task.status] ?? "TODO";
+  const next =
+    task.status === "TODO"
+      ? "DOING"
+      : task.status === "DOING"
+      ? "DONE"
+      : "TODO";
 
   await prisma.task.update({
     where: { id: taskId },
     data: {
-      status: next,
+      status: next as any,
       completedAt: next === "DONE" ? new Date() : null,
     },
   });
