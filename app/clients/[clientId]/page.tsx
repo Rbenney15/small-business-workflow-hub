@@ -41,6 +41,12 @@ export default async function ClientDetailPage({
             </h1>
             <p className="text-sm text-gray-600">{client.status}</p>
           </div>
+          <Link
+            href={`/clients/${client.id}/edit`}
+            className="inline-flex items-center rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900/10"
+          >
+            Edit Client
+          </Link>
 
           <Link
             href={`/jobs/new?clientId=${client.id}`}
