@@ -1,6 +1,9 @@
 import "./globals.css";
 import Link from "next/link";
 
+const navLink =
+  "block rounded-lg px-3 py-2 text-sm font-medium text-gray-800 hover:bg-white hover:text-gray-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900/20";
+
 export default function RootLayout({
   children,
 }: {
@@ -8,27 +11,37 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-white text-black">
+      <body className="min-h-screen bg-gray-50 text-gray-900 antialiased">
         <div className="flex min-h-screen">
-          <aside className="w-60 border-r p-4">
-            <div className="font-semibold text-lg">Workflow Hub</div>
-            <nav className="mt-6 space-y-1 text-sm">
-              <Link className="block rounded-lg px-3 py-2 hover:bg-gray-50" href="/dashboard">
+          {/* Sidebar */}
+          <aside className="w-64 border-r bg-gray-50 p-4">
+            <div className="rounded-xl border bg-white p-3">
+              <div className="font-semibold text-base">Workflow Hub</div>
+              <div className="text-xs text-gray-500">
+                Small Business Office MVP
+              </div>
+            </div>
+
+            <nav className="mt-4 space-y-1" aria-label="Primary navigation">
+              <Link className={navLink} href="/dashboard">
                 Dashboard
               </Link>
-              <Link className="block rounded-lg px-3 py-2 hover:bg-gray-50" href="/clients">
+              <Link className={navLink} href="/clients">
                 Clients
               </Link>
-              <Link className="block rounded-lg px-3 py-2 hover:bg-gray-50" href="/invoices">
+              <Link className={navLink} href="/invoices">
                 Invoices
               </Link>
             </nav>
-            <div className="mt-6 text-xs text-gray-400">
-              Phase 1.5 polish
-            </div>
+
+            <div className="mt-6 text-xs text-gray-500">Light mode • V.1.5</div>
           </aside>
 
-          <div className="flex-1">{children}</div>
+          {/* Main content */}
+          <div className="flex-1">
+            {/* Consistent padding on every page */}
+            <div className="p-4 md:p-6">{children}</div>
+          </div>
         </div>
       </body>
     </html>
