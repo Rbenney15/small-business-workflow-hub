@@ -57,7 +57,15 @@ export default async function InvoiceDetailPage({
 
             <div className="mt-1 flex items-center gap-2 text-sm">
               <span className="text-gray-600">Status:</span>
-              <span className="font-medium text-gray-900">
+              <span
+                className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold ${
+                  invoice.status === "PAID"
+                    ? "bg-green-50 text-green-800 border-green-200"
+                    : invoice.status === "SENT"
+                    ? "bg-blue-50 text-blue-800 border-blue-200"
+                    : "bg-gray-50 text-gray-800 border-gray-200"
+                }`}
+              >
                 {invoice.status}
               </span>
             </div>
