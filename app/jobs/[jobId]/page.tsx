@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
+import { cycleTaskStatus } from "./actions";
 
 function formatDate(d: Date | null) {
   if (!d) return "—";
@@ -187,6 +188,7 @@ export default async function JobDetailPage({
                       {t.assignedUser?.name ?? "—"}
                       {t.dueDate ? ` • Due: ${formatDate(t.dueDate)}` : ""}
                     </div>
+
                     {t.notes ? (
                       <div className="mt-2 text-sm text-gray-700 whitespace-pre-wrap">
                         {t.notes}
@@ -194,8 +196,21 @@ export default async function JobDetailPage({
                     ) : null}
                   </div>
 
-                  <div className="text-xs text-gray-500">
-                    {t.completedAt ? `Done: ${formatDate(t.completedAt)}` : ""}
+                  <div className="flex flex-col items-end gap-2">
+                    <form
+                      action={async () => {
+                        "use server";
+                        await cycleTaskStatus(job.id, t.id);
+                      }}
+                    >
+                      <button className="rounded-lg border px-3 py-1 text-xs font-medium hover:bg-gray-50">
+                        Cycle Status
+                      </button>
+                    </form>
+
+                    <div className="text-xs text-gray-500">
+                      {t.completedAt ? `Done: ${formatDate(t.completedAt)}` : ""}
+                    </div>
                   </div>
                 </div>
               </li>
