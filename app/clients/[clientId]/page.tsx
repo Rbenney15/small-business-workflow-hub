@@ -47,6 +47,12 @@ export default async function ClientDetailPage({
           >
             Edit Client
           </Link>
+          <Link
+            href={`/clients/${client.id}/delete`}
+            className="inline-flex items-center rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-900/10"
+          >
+            Archive / Delete
+          </Link>
 
           <Link
             href={`/jobs/new?clientId=${client.id}`}

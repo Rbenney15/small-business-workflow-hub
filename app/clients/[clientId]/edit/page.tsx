@@ -84,7 +84,6 @@ export default async function EditClientPage({
                 className={inputBase}
               >
                 <option value="ACTIVE">ACTIVE</option>
-                {/* If/when you add ARCHIVED to the enum, this will work immediately */}
                 <option value="ARCHIVED">ARCHIVED</option>
               </select>
             </div>
